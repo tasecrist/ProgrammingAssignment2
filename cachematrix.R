@@ -1,3 +1,4 @@
+
 ## The functions makeCacheMatrix and cacheSolve are used
 ## to cache the inverse of a matrix in order to avoid
 ## costly repeated computation.
@@ -6,31 +7,36 @@
 ## object that can cache its own inverse.
 
 makeCacheMatrix <- function(x = matrix()) {
-  inv<-matrix(data=NA,nrow(x),ncol(x))
-  set<-function(y=matrix()){  
-    x<<-y 
-    inv<<-matrix(data=NA,nrow(x),ncol(x))
-    get<-function() x
-    setinverse<-function(inver) inv<<inver
-    getinverse<-function() inv
-    list(set=set,get=get,setinverse=setinverse,getinverse=getinverse)
-    
+  ##if no function is called sets m (the inverse) to NULL 
+  m <- NULL
+  set <- function(y) {
+    x <<- y
+    m <<- NULL
   }
-  ## The function cacheSolve computes the inverse of the special "matrix"
-  ## returned by makeCacheMatrix above.
-  ## If the inverse has already been calculated 
-  ## (and the matrix has not changed), then cacheSolve 
-  ## retrieves the inverse from the cache.
-  
-  cacheSolve <- function(x, ...) {
-    
-    inv<-x$getinverse()
-    if(!is.na(inv[1,1])){
-      message("getting cached inverse")
-      return(inv)     ## Return a matrix that is the inverse of 'x'
-    }
-    matrix<-x$get()
-    inver<-solve(matrix) #calculate the inverse of matrix x
-    x$setinverse()
-    return(inver)   #display the inverse
+  get <- function() x
+  setinv <- function(inverse) m <<- inverse
+  getinv <- function() m
+  list(set = set, get = get,
+       setinv = setinv,
+       getinv = getinv)
+}
+
+## The function cacheSolve computes the inverse of the special "matrix"
+## returned by makeCacheMatrix above.
+## If the inverse has already been calculated 
+## (and the matrix has not changed), then cacheSolve 
+## retrieves the inverse from the cache.
+
+cacheSolve <- function(x, ...) {
+  ##pull up cached matrix that is the inverse of 'x'
+  m <- x$getinv()
+  if(!is.null(m)) { ## Return cached inverse matrix that is not empty
+    message("getting cached inverse")
+    return(m)
   }
+  ##pull up cached data, find inverse if cached inverse was empty
+  data <- x$get()
+  m <-solve(data, ...)
+  x$setinv(m)
+  m
+}
